@@ -1,0 +1,2 @@
+{"question":"What is the expense ratio?","contexts":["... expense ratio 0.03% ..."],"answer":"Expense ratio is 0.03%.","ground_truth":"0.03%"}
+{"question":"What index does the fund track?","contexts":["... seeks to track the S&P 500 Index ..."],"answer":"It tracks the S&P 500 Index.","ground_truth":"S&P 500 Index"}

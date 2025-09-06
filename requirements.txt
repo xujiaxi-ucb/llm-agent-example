@@ -1,0 +1,11 @@
+langchain==0.3.*
+langchain-community==0.3.*
+langgraph==0.2.*
+openai==1.*
+pinecone-client[grpc]==5.*        
+gradio==4.*
+ragas==0.2.*
+python-dotenv==1.*
+pypdf==4.*                        
+pandas==2.*
+requests==2.*

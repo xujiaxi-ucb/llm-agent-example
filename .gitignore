@@ -1,0 +1,6 @@
+venv
+.env
+app/__pycache__
+graph/__pycache__
+vec/__pycache__
+.gradio

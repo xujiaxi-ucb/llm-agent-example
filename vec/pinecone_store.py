@@ -85,6 +85,3 @@ def vectorstore():
     ensure_index()
     emb = _get_embeddings()
     return LC_Pinecone.from_existing_index(index_name=INDEX, embedding=emb)
-
-# Call delete_index once at the start of the application to ensure a clean slate
-delete_index()

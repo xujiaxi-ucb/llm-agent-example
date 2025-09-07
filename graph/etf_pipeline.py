@@ -1,5 +1,5 @@
 from typing import TypedDict, List, Dict, Any
-import os, re, requests, tempfile
+import os, re, requests, tempfile, json
 from langgraph.graph import StateGraph, END
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -119,7 +119,6 @@ def node_extract_metrics(state:S)->S:
     prompt = f"""From the following ETF fact-sheet snippets, extract a JSON with:
 {{
  "expense_ratio": "e.g., 0.03%",
-123
  "aum": "e.g., $450B" or null,
  "inception_date": "YYYY-MM-DD or original format",
  "benchmark": "index name",
@@ -128,7 +127,12 @@ def node_extract_metrics(state:S)->S:
 Only use values present in the context. If unknown, use null.
 Context:
 {ctx}"""
-    state["extracted"] = llm.invoke(prompt).parsed if hasattr(llm.invoke(prompt), "parsed") else llm.invoke(prompt).dict() if hasattr(llm.invoke(prompt), "dict") else {"raw": llm.invoke(prompt).content}
+    llm_output_content = llm.invoke(prompt).content
+    try:
+        state["extracted"] = json.loads(llm_output_content)
+    except json.JSONDecodeError:
+        logging.error(f"Failed to decode JSON from LLM output: {llm_output_content}")
+        state["extracted"] = {} # Fallback to empty dict on error
     return state
 
 def node_answer(state:S)->S:

@@ -1,8 +1,10 @@
-import gradio as gr, os, pandas as pd
+import gradio as gr, os, pandas as pd, json, logging
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv; load_dotenv()
 from graph.etf_pipeline import etf_app
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def run_single(pdf_file, question):
     sources = [pdf_file.name if pdf_file else "data/spy.pdf"]
@@ -22,7 +24,17 @@ def run_compare(pdf_file_a, pdf_file_b):
     for i in range(2):
         state = {"files":[files[i]], "sources":[sources[i]], "q":"Extract key metrics", "chunks":[], "retrieved":[]}
         out = etf_app.invoke(state)
-        meta = out.get("extracted", {})
+        extracted_data = out.get("extracted", {})
+        
+        # If extracted_data is a string, attempt to parse it as JSON
+        if isinstance(extracted_data, str):
+            try:
+                extracted_data = json.loads(extracted_data)
+            except json.JSONDecodeError:
+                logging.error(f"Failed to decode JSON from extracted data: {extracted_data}")
+                extracted_data = {} # Fallback to empty dict on error
+        
+        meta = extracted_data
         meta["source"] = sources[i]
         rows.append(meta)
     df = pd.DataFrame(rows)
@@ -43,6 +55,7 @@ with gr.Blocks() as demo:
     gr.Markdown("# ETF Fact-Sheet QA & Comparator (LangGraph × Pinecone × Gradio)")
     with gr.Tab("Single PDF QA"):
         f = gr.File(label="Upload PDF")
+        gr.Markdown("If no file is uploaded, `data/spy.pdf` will be used by default.")
         q = gr.Textbox(value="What is the expense ratio?", label="Question")
         btn = gr.Button("Run")
         table = gr.Dataframe(interactive=False)
@@ -52,6 +65,7 @@ with gr.Blocks() as demo:
     with gr.Tab("Compare two PDFs"):
         f1 = gr.File(label="PDF A")
         f2 = gr.File(label="PDF B")
+        gr.Markdown("If no files are uploaded, `data/spy.pdf` and `data/voo.pdf` will be used by default for comparison.")
         btn2 = gr.Button("Compare")
         table2 = gr.Dataframe(interactive=False); md2 = gr.Markdown()
         btn2.click(run_compare, inputs=[f1,f2], outputs=[table2, md2])

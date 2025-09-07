@@ -11,12 +11,12 @@ import subprocess
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class S(TypedDict):
-    files: List[str]                 # 本地PDF路径（一个或两个）
-    sources: List[str]               # 每个PDF的来源URL或文件名
+    files: List[str]                 # Local PDF paths (one or two)
+    sources: List[str]               # Source URL or filename for each PDF
     chunks: List[Dict[str,Any]]      # [{id,text,meta}]
     q: str
     retrieved: List[Dict[str,Any]]
-    extracted: Dict[str,Any]         # 结构化抽取
+    extracted: Dict[str,Any]         # Structured extraction
     answer_md: str
 
 def _load_pdf(path: str) -> str:
@@ -69,7 +69,7 @@ def _load_pdf(path: str) -> str:
             return ""
 
 def _download(url: str) -> str:
-    # 简易下载：把 PDF 存到临时文件
+    # Simple download: save PDF to a temporary file
     b = requests.get(url, timeout=30).content
     fd, path = tempfile.mkstemp(suffix=".pdf"); os.write(fd, b); os.close(fd)
     return path
@@ -106,14 +106,14 @@ def node_embed_upsert(state:S)->S:
 
 def node_retrieve(state:S)->S:
     vs = vectorstore()
-    # 按 doc_id 过滤；单文档QA取第0个，双文档对比时也各取若干
+    # Filter by doc_id; for single document QA, take the 0th, for dual document comparison, take several from each
     doc_id = 0
     docs_scores = vs.similarity_search_with_score(state["q"], k=6, filter={"doc_id": doc_id})
     state["retrieved"] = [{"text": d.page_content, "meta": d.metadata, "score": s} for d,s in docs_scores]
     return state
 
 def node_extract_metrics(state:S)->S:
-    """从已检索片段中抽取 ETF 关键指标（JSON）"""
+    """Extract key ETF metrics (JSON) from retrieved snippets"""
     llm = ChatOpenAI(model=os.getenv("GEN_MODEL","gpt-5-nano"))
     ctx = "\n\n".join([r["text"] for r in state["retrieved"]])
     prompt = f"""From the following ETF fact-sheet snippets, extract a JSON with:

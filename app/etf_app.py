@@ -19,7 +19,7 @@ def run_compare(pdf_file_a, pdf_file_b):
     sources = [pdf_file_a.name if pdf_file_a else "data/spy.pdf",
                pdf_file_b.name if pdf_file_b else "data/voo.pdf"]
     files   = [pdf_file_a.name if pdf_file_a else "data/spy.pdf", pdf_file_b.name if pdf_file_b else "data/voo.pdf"]
-    # 逐文档提问同一问题以便抽取指标
+    # Ask the same question for each document to extract metrics
     rows = []
     for i in range(2):
         state = {"files":[files[i]], "sources":[sources[i]], "q":"Extract key metrics", "chunks":[], "retrieved":[]}
@@ -38,7 +38,7 @@ def run_compare(pdf_file_a, pdf_file_b):
         meta["source"] = sources[i]
         rows.append(meta)
     df = pd.DataFrame(rows)
-    # 生成对比摘要
+    # Generate comparison summary
     def safe(x): return x if isinstance(x,str) else str(x)
     summary = f"""**Compare**
 - Source A: {safe(rows[0].get('source'))}
